@@ -33,18 +33,6 @@ resource "aws_s3_bucket_versioning" "website-bucket-versioning" {
   }
 }
 
-resource "aws_s3_bucket_lifecycle_configuration" "website-bucket-lifecycle-rule" {
-  bucket = aws_s3_bucket.website.id
-
-  rule {
-    id     = "delete versions"
-    status = "Enabled"
-    noncurrent_version_expiration {
-      noncurrent_days = 2
-    }
-  }
-}
-
 resource "aws_s3_bucket_policy" "website-bucket-policy" {
   bucket = aws_s3_bucket.website.id
   policy = <<POLICY
