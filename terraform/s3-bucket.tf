@@ -1,45 +1,55 @@
-resource "aws_s3_bucket" "website" {
-  bucket        = var.s3_name
-  force_destroy = true
-  tags = {
-    Name = "website-bucket-s3-static-website"
-  }
-}
+# S3 bucket for website.
+resource "aws_s3_bucket" "www_bucket" {
+  bucket = "www.${var.bucket_name}"
+  acl    = "public-read"
+  policy = data.aws_iam_policy_document.allow_public_s3_read.json
 
-resource "aws_s3_bucket_public_access_block" "s3Public" {
-  bucket                  = aws_s3_bucket.website.id
-  block_public_acls       = false
-  block_public_policy     = false
-  restrict_public_buckets = false
-  ignore_public_acls      = false
-}
-
-resource "aws_s3_bucket_website_configuration" "website-bucket-config" {
-  bucket = aws_s3_bucket.website.bucket
-
-  index_document {
-    suffix = "index.html"
+  cors_rule {
+    allowed_headers = ["Authorization", "Content-Length"]
+    allowed_methods = ["GET", "POST"]
+    allowed_origins = ["https://www.${var.domain_name}"]
+    max_age_seconds = 3000
   }
 
-  error_document {
-    key = "index.html"
+  website {
+    index_document = "index.html"
+    error_document = "index.html"
   }
+
+  tags = var.common_tags
 }
 
-resource "aws_s3_bucket_policy" "website" {
-  bucket = aws_s3_bucket.website.id
+# S3 bucket for redirecting non-www to www.
+resource "aws_s3_bucket" "root_bucket" {
+  bucket = var.bucket_name
+  acl    = "public-read"
+  policy = data.aws_iam_policy_document.allow_public_s3_read.json
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = "AllowGetObjects"
-    Statement = [
-      {
-        Sid       = "AllowPublic"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.website.arn}/**"
-      }
+  website {
+    redirect_all_requests_to = "https://www.${var.domain_name}"
+  }
+
+  tags = var.common_tags
+}
+
+# S3 Allow Public read access as data object
+data "aws_iam_policy_document" "allow_public_s3_read" {
+  statement {
+    sid    = "PublicReadGetObject"
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
     ]
-  })
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    resources = [
+      "arn:aws:s3:::${var.bucket_name}/*",
+      "arn:aws:s3:::www-${var.bucket_name}/*"
+    ]
+  }
 }
