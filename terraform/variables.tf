@@ -1,18 +1,18 @@
 variable "s3_name" {
-  type = string
+  type    = string
   default = "caitlingbailey-website"
 }
 
 variable "region" {
-  type = string
+  type        = string
   description = "The primary region where the website will be hosted."
-  default = "eu-west-1"
+  default     = "eu-west-1"
 }
 
 variable "root_domain_name" {
-  type = string
+  type        = string
   description = "The domain name of the website."
-  default = "caitlingbailey.com"
+  default     = "caitlingbailey.com"
 }
 
 variable "cloudfront_price_class" {
