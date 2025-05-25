@@ -1,8 +1,6 @@
 data "aws_route53_zone" "root_zone" {
-  name         = var.root_domain_name
-  private_zone = true
+  name = var.root_domain_name
 }
-
 
 resource "aws_route53_record" "root_cloudfront_record" {
   zone_id = data.aws_route53_zone.root_zone.zone_id
