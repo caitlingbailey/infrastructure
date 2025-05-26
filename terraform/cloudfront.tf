@@ -40,6 +40,8 @@ resource "aws_cloudfront_distribution" "cdn_static_website" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
+
+  aliases = ["${var.domain_name}", "www.${var.domain_name}"]
 }
 
 # CloudFront origin access control for S3 origin type with always signing using sigv4 protocol
