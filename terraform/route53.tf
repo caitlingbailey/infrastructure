@@ -7,9 +7,8 @@ data "aws_route53_zone" "zone" {
 
 # AWS Route53 record resource for certificate validation with dynamic for_each loop and properties for name, records, type, zone_id, and ttl.
 resource "aws_route53_record" "cert_validation" {
-  provider = aws.use_default_region
   for_each = {
-    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
+    for dvo in aws_acm_certificate.certificate.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
       type   = dvo.resource_record_type
@@ -19,9 +18,9 @@ resource "aws_route53_record" "cert_validation" {
   allow_overwrite = true
   name            = each.value.name
   records         = [each.value.record]
+  ttl             = 30
   type            = each.value.type
   zone_id         = data.aws_route53_zone.zone.zone_id
-  ttl             = 60
 }
 
 # AWS Route53 record resource for the "www" subdomain. The record uses an "A" type record and an alias to the AWS CloudFront distribution with the specified domain name and hosted zone ID. The target health evaluation is set to false.
