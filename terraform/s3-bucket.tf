@@ -1,55 +1,40 @@
-# S3 bucket for website.
-resource "aws_s3_bucket" "www_bucket" {
-  bucket = "www.${var.bucket_name}"
-  acl    = "public-read"
-  policy = data.aws_iam_policy_document.allow_public_s3_read.json
-
-  cors_rule {
-    allowed_headers = ["Authorization", "Content-Length"]
-    allowed_methods = ["GET", "POST"]
-    allowed_origins = ["https://www.${var.domain_name}"]
-    max_age_seconds = 3000
+# Creating S3 bucket and apply force destroy So, when going to destroy it won't throw error 'Bucket is not empty'
+resource "aws_s3_bucket" "s3-bucket" {
+  bucket        = var.bucket_name
+  force_destroy = true
+  lifecycle {
+    prevent_destroy = false
   }
-
-  website {
-    index_document = "index.html"
-    error_document = "index.html"
-  }
-
-  tags = var.common_tags
 }
 
-# S3 bucket for redirecting non-www to www.
-resource "aws_s3_bucket" "root_bucket" {
-  bucket = var.bucket_name
-  acl    = "public-read"
-  policy = data.aws_iam_policy_document.allow_public_s3_read.json
-
-  website {
-    redirect_all_requests_to = "https://www.${var.domain_name}"
-  }
-
-  tags = var.common_tags
+# Keeping S3 bucket private
+resource "aws_s3_bucket_public_access_block" "website_bucket_access" {
+  bucket                  = aws_s3_bucket.s3-bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
-# S3 Allow Public read access as data object
-data "aws_iam_policy_document" "allow_public_s3_read" {
+# This Terraform code defines an IAM policy document that allows CloudFront to access objects in the S3 bucket
+data "aws_iam_policy_document" "website_bucket" {
   statement {
-    sid    = "PublicReadGetObject"
-    effect = "Allow"
-
-    actions = [
-      "s3:GetObject",
-    ]
-
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.s3-bucket.arn}/*"]
     principals {
-      type        = "AWS"
-      identifiers = ["*"]
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
     }
-
-    resources = [
-      "arn:aws:s3:::${var.bucket_name}/*",
-      "arn:aws:s3:::www-${var.bucket_name}/*"
-    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = [aws_cloudfront_distribution.cdn_static_website.arn]
+    }
   }
+}
+
+# Creating the S3 policy and applying it for the S3 bucket
+resource "aws_s3_bucket_policy" "website_bucket_policy" {
+  bucket = aws_s3_bucket.s3-bucket.id
+  policy = data.aws_iam_policy_document.website_bucket.json
 }
