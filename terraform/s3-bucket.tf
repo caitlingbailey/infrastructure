@@ -7,14 +7,6 @@ resource "aws_s3_bucket" "s3-bucket" {
   }
 }
 
-resource "aws_s3_bucket" "s3-bucket-test" {
-  bucket        = "caitlingbailey-test"
-  force_destroy = true
-  lifecycle {
-    prevent_destroy = false
-  }
-}
-
 # Keeping S3 bucket private
 resource "aws_s3_bucket_public_access_block" "website_bucket_access" {
   bucket                  = aws_s3_bucket.s3-bucket.id
