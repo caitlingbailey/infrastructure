@@ -28,7 +28,6 @@ resource "aws_cloudfront_distribution" "cdn_static_website" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     target_origin_id       = "my-s3-origin"
-    cache_policy_id        = data.aws_cloudfront_cache_policy.cache_policy.id
     smooth_streaming       = false
   }
 
