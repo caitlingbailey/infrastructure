@@ -27,8 +27,15 @@ resource "aws_cloudfront_distribution" "cdn_static_website" {
     compress               = true
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "my-s3-origin"
+    target_origin_id       = var.domain_name
     smooth_streaming       = false
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
   }
 
   restrictions {
