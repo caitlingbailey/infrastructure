@@ -1,3 +1,11 @@
+resource "aws_cloudfront_origin_access_control" "website_origin_access_control" {
+  name                              = "${var.domain_name} Access Control Policy"
+  description                       = "Cloudfront access control policy for the ${var.domain_name} distribution."
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
 # CloudFront distribution with S3 origin, HTTPS redirect, IPv6 enabled, no cache, and ACM SSL certificate.
 resource "aws_cloudfront_distribution" "cdn_static_website" {
   enabled             = true
