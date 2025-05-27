@@ -57,6 +57,14 @@ resource "aws_cloudfront_distribution" "cdn_static_website" {
   }
 }
 
+resource "aws_cloudfront_origin_access_control" "default" {
+  name                              = "cloudfront OAC"
+  description                       = "description OAC"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
 data "aws_cloudfront_cache_policy" "cache_policy" {
   name = "Managed-CachingOptimized"
 }
