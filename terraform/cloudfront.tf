@@ -36,6 +36,11 @@ resource "aws_cloudfront_distribution" "cdn_static_website" {
         forward = "none"
       }
     }
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = "arn:aws:cloudfront::439793709230:function/handle-routing"
+    }
   }
 
   restrictions {
