@@ -16,18 +16,6 @@ resource "aws_s3_bucket_public_access_block" "website_bucket_access" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_website_configuration" "website-bucket-config" {
-  bucket = aws_s3_bucket.s3-bucket.bucket
-
-  index_document {
-    suffix = "index.html"
-  }
-
-  error_document {
-    key = "index.html"
-  }
-}
-
 resource "aws_s3_bucket_versioning" "website-bucket-versioning" {
   bucket = aws_s3_bucket.s3-bucket.id
   versioning_configuration {
@@ -35,26 +23,30 @@ resource "aws_s3_bucket_versioning" "website-bucket-versioning" {
   }
 }
 
-resource "aws_s3_bucket_policy" "website-bucket-policy" {
-  bucket = aws_s3_bucket.s3-bucket.id
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": {
-        "Sid": "AllowCloudFrontServicePrincipalReadOnly",
-        "Effect": "Allow",
-        "Principal": {
-            "Service": "cloudfront.amazonaws.com"
-        },
-        "Action": "s3:GetObject",
-        "Resource": "${aws_s3_bucket.s3-bucket.arn}/*",
-        "Condition": {
-            "StringEquals": {
-                "AWS:SourceArn": "${aws_cloudfront_distribution.cdn_static_website.arn}"
-            }
-        }
-    }
+resource "aws_s3_bucket_policy" "website_bucket_policy" {
+  bucket = aws_s3_bucket.s3-bucket.bucket
+  policy = data.aws_iam_policy_document.allow_cloudfront_oac_access.json
 }
 
-POLICY
+data "aws_iam_policy_document" "allow_cloudfront_oac_access" {
+  statement {
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:GetObject"
+    ]
+
+    resources = [
+      "${aws_s3_bucket.s3-bucket.arn}/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = [aws_cloudfront_distribution.cdn_static_website.arn]
+    }
+  }
 }
