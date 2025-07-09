@@ -24,7 +24,7 @@ resource "aws_s3_bucket_versioning" "website-bucket-versioning" {
 }
 
 resource "aws_s3_bucket_policy" "website_bucket_policy" {
-  bucket = aws_s3_bucket.s3-bucket.bucket
+  bucket = var.bucket_name
   policy = data.aws_iam_policy_document.allow_cloudfront_oac_access.json
 }
 
